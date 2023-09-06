@@ -1,3 +1,4 @@
+use hello::ThreadPool;
 use std::{
     fs,
     io::{prelude::*, BufReader},
@@ -9,10 +10,16 @@ use std::{
 fn main() {
     let tcp_listener = TcpListener::bind("127.0.0.1:4567").unwrap();
 
+    let pool = ThreadPool::new(4);
+
     for stream in tcp_listener.incoming() {
         let stream = stream.unwrap();
 
         handle_connection(stream);
+
+        pool.execute(|| {
+            handle_connection(stream);
+        })
     }
 }
 
