@@ -10,27 +10,41 @@ fn main() {
     for stream in tcp_listener.incoming() {
         let stream = stream.unwrap();
 
-        handleConnection(stream);
+        handle_connection(stream);
     }
 }
 
-fn handleConnection(mut stream: TcpStream) {
-    let bufReader = BufReader::new(&mut stream);
+fn handle_connection(mut stream: TcpStream) {
+    let buf_reader = BufReader::new(&mut stream);
 
-    let http_request: Vec<_> = bufReader
+    let http_request: Vec<_> = buf_reader
         .lines()
         .map(|result| result.unwrap())
         .take_while(|line| !line.is_empty())
         .collect();
 
-    let status_line = "HTTP/1.1 200 OK";
+    let request_uri = fetch_request_uri(&http_request[0]);
+    println!("Got request for: {request_uri}");
 
-    // fetch the html file
-    let contents = fs::read_to_string("hello.html").unwrap();
-    let length = contents.len(); // have to send the length of the response message body
+    if request_uri == "/" {
+        let status_line = "HTTP/1.1 200 OK";
 
-    // formatted response
-    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+        // fetch the html file
+        let contents = fs::read_to_string("hello.html").unwrap();
+        let length = contents.len(); // have to send the length of the response message body
 
-    stream.write_all(response.as_bytes()).unwrap();
+        // formatted response
+        let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+
+        stream.write_all(response.as_bytes()).unwrap();
+    } else {
+        let status_line = "HTTP/1.1 404 NOT FOUND\r\n\r\n";
+        stream.write_all(status_line.as_bytes()).unwrap();
+    }
+}
+
+fn fetch_request_uri<'a>(request_line: &'a str) -> &'a str {
+    let split_request_line: Vec<&str> = request_line.split_whitespace().collect();
+
+    split_request_line[1]
 }
