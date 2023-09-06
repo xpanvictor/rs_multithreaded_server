@@ -2,6 +2,8 @@ use std::{
     fs,
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    thread,
+    time::Duration,
 };
 
 fn main() {
@@ -29,10 +31,13 @@ fn handle_connection(mut stream: TcpStream) {
     let request_uri = fetch_request_uri(&http_request);
     println!("Got request for: {request_uri}");
 
-    let (status_line, file_name) = if request_uri == "/" {
-        ("HTTP/1.1 200 OK", "hello.html")
-    } else {
-        ("HTTP/1.1 404 NOT FOUND", "404.html")
+    let (status_line, file_name) = match request_uri {
+        "/" => ("HTTP/1.1 200 OK", "hello.html"),
+        "/sleep" => {
+            thread::sleep(Duration::from_secs(5));
+            ("HTTP/1.1 200 OK", "hello.html")
+        }
+        _ => ("HTTP/1.1 404 NOT FOUND", "404.html"),
     };
 
     // fetch the html file
