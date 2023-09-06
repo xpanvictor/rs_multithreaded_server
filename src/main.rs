@@ -45,7 +45,7 @@ fn handle_connection(mut stream: TcpStream) {
     stream.write_all(response.as_bytes()).unwrap();
 }
 
-fn fetch_request_uri<'a>(request_line: &'a str) -> &'a str {
+fn fetch_request_uri(request_line: &str) -> &str {
     let split_request_line: Vec<&str> = request_line.split_whitespace().collect();
 
     split_request_line[1]
