@@ -15,8 +15,6 @@ fn main() {
     for stream in tcp_listener.incoming() {
         let stream = stream.unwrap();
 
-        handle_connection(stream);
-
         pool.execute(|| {
             handle_connection(stream);
         })
